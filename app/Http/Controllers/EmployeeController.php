@@ -46,16 +46,16 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employee_code' => 'required|string|max:50|unique:employees,employee_code',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:employees,email',
-            'password' => 'required|string|min:6|confirmed',
+            'employee_code' => 'nullable|string|max:50|unique:employees,employee_code',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255|unique:employees,email',
+            'password' => 'nullable|string|min:6|confirmed',
             'phone' => 'nullable|string|max:50',
             'dob' => 'nullable|date',
-            'hire_date' => 'required|date',
+            'hire_date' => 'nullable|date',
             'position' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
-            'status' => ['required', Rule::in(['active', 'inactive', 'terminated', 'resigned'])],
+            'status' => ['nullable', Rule::in(['active', 'inactive', 'terminated', 'resigned'])],
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             // Family Details
             'relations' => 'nullable|array',
@@ -125,8 +125,12 @@ class EmployeeController extends Controller
             $validated['profile_image'] = $request->file('profile_image')->store('profile_images', 'public');
         }
 
-        // Hash password
-        $validated['password'] = Hash::make($validated['password']);
+        // Hash password only if provided
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
 
         // Create employee
         $employee = Employee::create($validated);
@@ -172,16 +176,16 @@ class EmployeeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'employee_code' => ['required', 'string', 'max:50', Rule::unique('employees')->ignore($employee->id)],
-                'name' => 'required|string|max:255',
-                'email' => ['required', 'email', 'max:255', Rule::unique('employees')->ignore($employee->id)],
+                'employee_code' => ['nullable', 'string', 'max:50', Rule::unique('employees')->ignore($employee->id)],
+                'name' => 'nullable|string|max:255',
+                'email' => ['nullable', 'email', 'max:255', Rule::unique('employees')->ignore($employee->id)],
                 'password' => 'nullable|string|min:6|confirmed',
                 'phone' => 'nullable|string|max:50',
                 'dob' => 'nullable|date',
-                'hire_date' => 'required|date',
+                'hire_date' => 'nullable|date',
                 'position' => 'nullable|string|max:100',
                 'department' => 'nullable|string|max:100',
-                'status' => ['required', Rule::in(['active', 'inactive', 'terminated', 'resigned'])],
+                'status' => ['nullable', Rule::in(['active', 'inactive', 'terminated', 'resigned'])],
                 'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
                 // Family Details
                 'relations' => 'nullable|array',
@@ -580,8 +584,8 @@ private function updateRelatedRecords(Employee $employee, Request $request)
     public function login(Request $request)
     {
         $request->validate([
-            'employee_code' => 'required|string',
-            'password' => 'required|string',
+            'employee_code' => 'nullable|string',
+            'password' => 'nullable|string',
         ]);
 
         $credentials = $request->only('employee_code', 'password');
@@ -653,7 +657,7 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         $employee = Auth::guard('employee')->user();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6|confirmed',
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -743,19 +747,19 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         }
 
         $validated = $request->validate([
-            'task_name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'assigned_team' => ['required', Rule::in(['Individual', 'Team'])],
+            'task_name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'assigned_team' => ['nullable', Rule::in(['Individual', 'Team'])],
             'assigned_to' => 'nullable|exists:employees,id',
             'team_lead_id' => 'nullable|exists:employees,id',
             'team_members' => 'nullable|array',
             'team_members.*' => 'exists:employees,id',
             'team_created_by' => ['nullable', Rule::in(['admin', 'team_lead'])],
             'selected_team' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => ['required', Rule::in(['Not Started', 'In Progress', 'Completed', 'On Hold'])],
-            'priority' => ['required', Rule::in(['Low', 'Medium', 'High'])],
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'status' => ['nullable', Rule::in(['Not Started', 'In Progress', 'Completed', 'On Hold'])],
+            'priority' => ['nullable', Rule::in(['Low', 'Medium', 'High'])],
             'progress' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -778,7 +782,7 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         }
 
         $validated = $request->validate([
-            'progress' => 'required|numeric|min:0|max:100',
+            'progress' => 'nullable|numeric|min:0|max:100',
             'status' => ['nullable', Rule::in(['Not Started', 'In Progress', 'Completed', 'On Hold'])],
         ]);
 
@@ -840,9 +844,9 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         $employee = Auth::guard('employee')->user();
 
         $validated = $request->validate([
-            'task_id' => 'required|exists:tasks,id',
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'task_id' => 'nullable|exists:tasks,id',
+            'title' => 'nullable|string|max:255',
+            'content' => 'nullable|string',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,txt,jpg,jpeg,png|max:2048',
             'send_to_team_lead' => 'nullable|boolean',
         ]);
@@ -966,7 +970,7 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         }
 
         $validated = $request->validate([
-            'team_lead_status' => ['required', Rule::in(['sent', 'read', 'responded'])],
+            'team_lead_status' => ['nullable', Rule::in(['sent', 'read', 'responded'])],
             'team_lead_review' => 'nullable|string|max:1000',
             'team_lead_rating' => 'nullable|integer|min:1|max:5',
         ]);
@@ -1071,14 +1075,15 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         }
 
         $validated = $request->validate([
-            'scores' => 'required|array',
-            'scores.*.*' => 'required|numeric|min:0',
+            'scores' => 'nullable|array',
+            'scores.*.*' => 'nullable|numeric|min:0',
             'best_employee_id' => 'nullable|exists:employees,id',
             'best_employee_description' => 'nullable|string|max:1000',
         ]);
 
-        // Save points for each participant and criterion
-        foreach ($validated['scores'] as $toEmployeeId => $criteriaScores) {
+        // Save points for each participant and criterion when provided
+        $scoreSets = $validated['scores'] ?? [];
+        foreach ($scoreSets as $toEmployeeId => $criteriaScores) {
             foreach ($criteriaScores as $criterionId => $points) {
                 \App\Models\Point::updateOrCreate(
                     [
@@ -1131,10 +1136,10 @@ private function updateRelatedRecords(Employee $employee, Request $request)
         $employee = Auth::guard('employee')->user();
 
         $request->validate([
-            'month' => 'required|date_format:Y-m',
+            'month' => 'nullable|date_format:Y-m',
         ]);
 
-        $month = $request->month;
+        $month = $request->month ?: Carbon::now('Asia/Kolkata')->format('Y-m');
 
         // Parse month and year
         $date = Carbon::createFromFormat('Y-m', $month, 'Asia/Kolkata');
@@ -1240,7 +1245,7 @@ private function updateRelatedRecords(Employee $employee, Request $request)
      public function storeReportStatus(Request $request)
     {
         $request->validate([
-            'is_submitted' => 'required|boolean',
+            'is_submitted' => 'nullable|boolean',
         ]);
 
         ReportSubmission::updateOrCreate(

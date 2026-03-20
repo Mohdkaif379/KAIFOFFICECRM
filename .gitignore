@@ -5,9 +5,7 @@
 /public/storage
 /storage/*.key
 /vendor
-.env
 .env.backup
-.env.production
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
@@ -18,3 +16,6 @@ yarn-error.log
 /.idea
 /.vscode
 /public/InShot_20250624_142253030 (online-video-cutter.com).mp4
+config.bat
+temp_auto_push.bat
+temp_interactive_push.bat
