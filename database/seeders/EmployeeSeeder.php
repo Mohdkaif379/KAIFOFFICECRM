@@ -137,7 +137,7 @@ class EmployeeSeeder extends Seeder
                 'position' => 'System Administrator',
                 'department' => 'IT',
                 'status' => 'active',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('12345678'),
                 'bank_name' => 'Bank of Baroda',
                 'account_number' => '789012345678',
                 'ifsc_code' => 'BARB0DELHI1',
@@ -169,7 +169,11 @@ class EmployeeSeeder extends Seeder
         ];
 
         foreach ($employees as $employee) {
-            Employee::create($employee);
+            // Prevent duplicate seed errors on unique fields when seeding multiple times
+            Employee::updateOrCreate(
+                ['employee_code' => $employee['employee_code']],
+                $employee
+            );
         }
     }
 }
